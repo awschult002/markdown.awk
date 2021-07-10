@@ -265,5 +265,15 @@ check <<-"EOF"
 </blockquote>
 EOF
 
+check <<-"EOF"
+>     code blocks
+>     in blockquotes
+---
+<blockquote>
+<pre><code>code blocks
+in blockquotes</code></pre>
+</blockquote>
+EOF
+
 echo 
 echo "All tests passed"

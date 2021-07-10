@@ -14,7 +14,7 @@ check() {
 		elif [[ "$current" == "input" ]]; then
 			echo "$line" >> "$input"
 		else
-			echo $line >> "$expected_output"
+			echo "$line" >> "$expected_output"
 		fi
     done
 
@@ -112,11 +112,10 @@ first line of code
 second line of code
 ```
 ---
-<code>
+<pre><code>
 first line of code
 
-second line of code
-</code>
+second line of code</code></pre>
 EOF
 
 check <<-"EOF"
@@ -154,5 +153,29 @@ asdf
 <li>bar qux</li>
 </ul>
 EOF
+
+check <<-"EOF"
+* first
+level 1
+    * second
+  level 1
+  * second level 2
+    * third level
+* first level
+  2
+---
+<ul>
+<li>first level 1
+<ul>
+<li>second level 1</li>
+<li>second level 2
+<ul>
+<li>third level</li>
+</ul></li>
+</ul></li>
+<li>first level 2</li>
+</ul>
+EOF
+
 echo 
 echo "All tests passed"

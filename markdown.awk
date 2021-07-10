@@ -42,55 +42,86 @@ function startswith(str, s,    sl, j) {
 	}
 	return 0;
 }
-#function parse_list_item(str, 
 
-function fold_lines(arr, i, result) {
-	for (i in arr) {
-		if (result != "")
-			result = result " " arr[i];
-		else
-			result = arr[i];
-	}
+function rstrip(str) {
+	gsub(/ *\n*$/, "", str);
+	return str;
 }
 
-function parse_list(str,    buf, result, i, ind, line, lines, indent) {
-	result = "<ul>\n";
+function lstrip(str) {
+	gsub(/^ *\n*/, "", str);
+	return str;
+}
+
+function join_lines(first, second, sep) {
+	if (sep == "")
+		sep = " ";
+
+	if (second == "")
+		return first;
+
+	if (first == "")
+		return second;
+
+	return first sep second;
+}
+
+function strip_list(str) {
+	gsub(/^ *\* /, "", str);
+	gsub(/^ *[[:digit:]]*\. /, "", str);
+	return str;
+}
+
+function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet) {
+	result = "";
 	buf = "";
 
-	print "parse: " str ">" startswith(str, "* ")
 	split(str, lines, "\n");
 
+	str = ""
 	for (i in lines) {
 		line = lines[i];
+
+		if (match(line, / *\* /) || match(line, / *[[:digit:]]+\. /))
+			str = join_lines(str, line, "\n");
+		else
+			str = join_lines(rstrip(str), lstrip(line), " ");
 	}
 
-	indent = 0;
+	split(str, lines, "\n")
+
+	indent = match(str, /[^ ]/);
+	is_bullet = match(str, /^ *\* /)
+
 	for (i in lines) {
 		line = lines[i];
-		print "line: " line " " startswith(line, "* ") " " indent
-		ind = startswith(line, "* ");
-		if (indent == 0 && ind > 0) {
-			indent = ind;
-		}
-		else if (indent > 0 && ind > 0 && ind <= indent) {
-			if (length(buf) > 0) {
-				result = result "<li>" parse_list(buf) "</li>\n";
+
+		if (match(line, "[^ ]") > indent)
+			buf = join_lines(buf, line, "\n");
+		else {
+			indent = match(line, "[^ ]");
+
+			if (buf != "") {
+				result = join_lines(result, parse_list(buf), "\n");
 				buf = "";
 			}
+			if (i > 1)
+				result = result "</li>\n"
+			result = result "<li>" strip_list(line)
 		}
-		if (length(buf) > 0)
-			buf = buf "\n";
+		
+	}
 
-		if (ind > 0 && ind <= indent) {
-			buf = buf substr(line, ind+2, length(line) - 2);
-		}
-		else
-			buf = buf line;
+	if (buf != "") {
+		result = join_lines(result, parse_list(buf), "\n")
 	}
-	if (length(buf) > 0) {
-		result = result "<li>" parse_list(buf) "</li>\n";
-	}
-	result = result "</ul>";
+	result = result "</li>";
+
+	if (is_bullet)
+		result = "<ul>\n" result "\n</ul>";
+	else
+		result = "<ol>\n" result "\n</ol>";
+
 	return result;
 }
 
@@ -187,21 +218,14 @@ function parse_body(str) {
 
 /```/ {
 	if (startswith(body, "```") == 1) {
-	    if (body != "")
-		    body = body "\n";
-
-		print "<code>" substr(body, 4, length(body)-3) "</code>";
+		print "<pre><code>" substr(body, 4, length(body)-3) "</code></pre>";
 		body = "";
 		next;
 	}
 }
 
 // {
-	if (body != "")
-		body = body "\n" $0;
-	else
-		body = $0;
-
+	body = join_lines(body, $0, "\n")
 	next;
 }
 

@@ -93,23 +93,38 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	indent = match(str, /[^ ]/);
 	is_bullet = match(str, /^ *\* /)
 
+	if (is_bullet)
+		result = "<ul>\n"
+	else
+		result = "<ol>\n"
+
 	for (i in lines) {
 		line = lines[i];
 
-		if (match(line, "[^ ]") > indent)
+		if (match(line, "[^ ]") > indent) {
 			buf = join_lines(buf, line, "\n");
-		else {
-			indent = match(line, "[^ ]");
-
-			if (buf != "") {
-				result = join_lines(result, parse_list(buf), "\n");
-				buf = "";
-			}
-			if (i > 1)
-				result = result "</li>\n"
-			result = result "<li>" strip_list(line)
+			continue
 		}
-		
+
+		indent = match(line, "[^ ]");
+
+		if (buf != "") {
+			result = join_lines(result, parse_list(buf), "\n");
+			buf = "";
+		}
+		if (i > 1)
+			result = result "</li>\n"
+
+		if (is_bullet && match(line, / *[[:digit:]]+\. /)) {
+			is_bullet = 0;
+			result = result "</ul>\n<ol>\n";
+		}
+		if (is_bullet == 0 && match(line, / *\* /)) {
+			is_bullet = 1;
+			result = result "</ol>\n<ul>\n";
+		}
+
+		result = result "<li>" parse_block(strip_list(line))
 	}
 
 	if (buf != "") {
@@ -118,9 +133,9 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	result = result "</li>";
 
 	if (is_bullet)
-		result = "<ul>\n" result "\n</ul>";
+		result = result "\n</ul>";
 	else
-		result = "<ol>\n" result "\n</ol>";
+		result = result "\n</ol>";
 
 	return result;
 }
@@ -129,9 +144,6 @@ function parse_block(str,    result, end, i) {
 	#print "block '" str "'"
 	result = ""
 
-	if (substr(str, 1, 2) == "* ") {
-		return parse_list(str);
-	}
 
 	for (i=1; i<=length(str); i++) {
 		if (substr(str, i, 2) == "**") {
@@ -176,8 +188,8 @@ function parse_block(str,    result, end, i) {
 }
 
 function parse_paragraph(str) {
-	if (substr(str, 1, 2 ) == "* ") {
-		return parse_block(str);
+	if (match(str, /^\* /) || match(str, /^[[:digit:]]\. /)) {
+		return parse_list(str);
 	}
 	else  {
 		return "<p>" parse_block(str) "</p>";

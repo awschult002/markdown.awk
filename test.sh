@@ -143,14 +143,38 @@ EOF
 check <<-"EOF"
 asdf
 
-* foo
-* bar
-  qux
+* bullet 1
+* bullet
+  2
 ---
 <p>asdf</p>
 <ul>
-<li>foo</li>
-<li>bar qux</li>
+<li>bullet 1</li>
+<li>bullet 2</li>
+</ul>
+EOF
+
+check <<-"EOF"
+asdf
+
+1. number 1
+2. number
+  2
+---
+<p>asdf</p>
+<ol>
+<li>number 1</li>
+<li>number 2</li>
+</ol>
+EOF
+
+check <<-"EOF"
+* **basic formatting**
+* ```in list```
+---
+<ul>
+<li><strong>basic formatting</strong></li>
+<li><code>in list</code></li>
 </ul>
 EOF
 
@@ -175,6 +199,26 @@ level 1
 </ul></li>
 <li>first level 2</li>
 </ul>
+EOF
+
+check <<-"EOF"
+* bullet1
+1. number1
+* bullet2
+2. number2
+---
+<ul>
+<li>bullet1</li>
+</ul>
+<ol>
+<li>number1</li>
+</ol>
+<ul>
+<li>bullet2</li>
+</ul>
+<ol>
+<li>number2</li>
+</ol>
 EOF
 
 echo 

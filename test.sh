@@ -87,6 +87,17 @@ check <<-EOF
 EOF
 
 check <<-EOF
+underlined header 1
+===================
+
+underlined header 2
+-------------------
+---
+<h1>underlined header 1</h1>
+<h2>underlined header 2</h2>
+EOF
+
+check <<-EOF
 **bold**
 ---
 <p><strong>bold</strong></p>

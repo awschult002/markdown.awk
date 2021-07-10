@@ -3,12 +3,23 @@ BEGIN {
 	in_code = 0
 }
 
-function parse_header(str) {
-	match(str, /#+/);
-    hnum = RLENGTH;
+function parse_header(str,    hnum, content) {
+	if (substr(str, 1, 1) == "#") {
+		match(str, /#+/);
+    	hnum = RLENGTH;
 
-	content = parse_line(substr(str, hnum + 1, length(str) - hnum ));
-	return "<h" hnum ">" content "</h" hnum ">";
+		content = parse_line(substr(str, hnum + 1, length(str) - hnum ));
+		return "<h" hnum ">" content "</h" hnum ">";
+	}
+	if (match(body, /^[^\n]+\n=+$/)) {
+		gsub(/\n=+$/, "", str);
+		return "<h1>" parse_line(str) "</h1>"
+	}
+	if (match(body, /^[^\n]+\n-+$/)) {
+		gsub(/\n-+$/, "", str);
+		return "<h2>" parse_line(str) "</h2>"
+	}
+	return "";
 }
 
 function read_line(str, pos, res, i) {
@@ -254,7 +265,7 @@ function parse_block(str) {
 	if (match(str, /^```\n.*```$/) || match(str, /^    /)) {
 		return parse_code(str);
 	}
-	if (substr(str, 1, 1) == "#") {
+	if (substr(str, 1, 1) == "#" || match(body, /^[^\n]+\n[-=]+$/)) {
 		return parse_header(str);
 	}
 	else if (substr(str, 1, 1) == ">") {
@@ -276,6 +287,9 @@ function line_continues(body, line) {
 		return 1;
 
 	if (match(body, /^#* /))
+		return 0;
+
+	if (match(body, /^[^\n]+\n[-=]+$/))
 		return 0;
 
 	if (line != "")

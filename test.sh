@@ -221,5 +221,28 @@ check <<-"EOF"
 </ol>
 EOF
 
+check <<-"EOF"
+> foo
+> bar
+---
+<blockquote>
+<p>foo bar</p>
+</blockquote>
+EOF
+
+check <<-"EOF"
+> foo
+> 
+> > bar
+> > baz
+---
+<blockquote>
+<p>foo</p>
+<blockquote>
+<p>bar baz</p>
+</blockquote>
+</blockquote>
+EOF
+
 echo 
 echo "All tests passed"

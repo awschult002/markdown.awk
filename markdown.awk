@@ -7,7 +7,7 @@ function parse_header(str) {
 	match($0, /#+/);
     hnum = RLENGTH;
 
-	content = parse_block(substr(str, hnum + 1, length(str) - hnum ));
+	content = parse_line(substr(str, hnum + 1, length(str) - hnum ));
 	return "<h" hnum ">" content "</h" hnum ">";
 }
 
@@ -124,7 +124,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 			result = result "</ol>\n<ul>\n";
 		}
 
-		result = result "<li>" parse_block(strip_list(line))
+		result = result "<li>" parse_line(strip_list(line))
 	}
 
 	if (buf != "") {
@@ -140,7 +140,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	return result;
 }
 
-function parse_block(str,    result, end, i) {
+function parse_line(str,    result, end, i) {
 	#print "block '" str "'"
 	result = ""
 
@@ -150,7 +150,7 @@ function parse_block(str,    result, end, i) {
 			end = find(str, "**", i+2);
 
 			if (end != 0) {
-				result = result "<strong>" parse_block(substr(str, i+2, end - i - 2)) "</strong>";	
+				result = result "<strong>" parse_line(substr(str, i+2, end - i - 2)) "</strong>";	
 				i = end+1;
 			}
 			else {
@@ -183,26 +183,68 @@ function parse_block(str,    result, end, i) {
 			}
 		}
 	}
-	#print "block result '" result "'"
+
 	return result;
 }
 
-function parse_paragraph(str) {
-	if (match(str, /^\* /) || match(str, /^[[:digit:]]\. /)) {
+function parse_blockquote(str,    i, lines, line, buf, result) {
+	split(str, lines, "\n");
+
+	str = ""
+	for (i in lines) {
+		line = lines[i];
+
+		if (match(line, /^>/))
+			str = join_lines(str, line, "\n");
+		else
+			str = join_lines(rstrip(str), lstrip(line), " ");
+	}
+	
+	split(str, lines, "\n");
+
+	result = "<blockquote>";
+	buf = "";
+	for (i in lines) {
+		line = lines[i];
+		gsub(/^> ?/, "", line);
+
+		if (match(line, /^ *$/)) {
+			result = join_lines(result, parse_block(buf), "\n");
+			buf = "";
+		}
+		else {
+			buf = join_lines(buf, line, "\n");	
+		}
+	}
+
+	if (buf != "")
+		result = join_lines(result, parse_block(buf), "\n");
+
+	result = result "\n</blockquote>"
+
+	return result;
+}
+
+function parse_block(str) {
+	if (str == "")
+		return "";
+
+	if (substr(str, 1, 1) == "#") {
+		return parse_header(str);
+	}
+	else if (substr(str, 1, 1) == ">") {
+		return parse_blockquote(str);
+	}
+	else if (match(str, /^\* /) || match(str, /^[[:digit:]]\. /)) {
 		return parse_list(str);
 	}
 	else  {
-		return "<p>" parse_block(str) "</p>";
+		return "<p>" parse_line(str) "</p>";
 	}
 }
 
 function parse_body(str) {
-	if (substr(str, 1, 1) == "#") {
-		print(parse_header(str));
-	}
-	else {
-		print(parse_paragraph(str));
-	}
+    print(parse_block(str));
 }
 
 /^#/ {

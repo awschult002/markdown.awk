@@ -72,7 +72,7 @@ check <<-EOF
 # Header
 body
 ---
-<h1> Header</h1>
+<h1>Header</h1>
 <p>body</p>
 EOF
 
@@ -81,9 +81,9 @@ check <<-EOF
 ## Header2
 ### Header3
 ---
-<h1> Header1</h1>
-<h2> Header2</h2>
-<h3> Header3</h3>
+<h1>Header1</h1>
+<h2>Header2</h2>
+<h3>Header3</h3>
 EOF
 
 check <<-EOF

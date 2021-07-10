@@ -8,7 +8,8 @@ function parse_header(str,    hnum, content) {
 		match(str, /#+/);
     	hnum = RLENGTH;
 
-		content = parse_line(substr(str, hnum + 1, length(str) - hnum ));
+		gsub(/^#+ */, "", str);
+		content = parse_line(str);
 		return "<h" hnum ">" content "</h" hnum ">";
 	}
 	if (match(body, /^[^\n]+\n=+$/)) {

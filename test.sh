@@ -128,6 +128,16 @@ second line of code
 EOF
 
 check <<-"EOF"
+    code
+    indented by
+    spaces
+---
+<pre><code>code
+indented by
+spaces</code></pre>
+EOF
+
+check <<-"EOF"
 asdf
 
 * foo

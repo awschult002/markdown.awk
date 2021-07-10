@@ -4,7 +4,7 @@ BEGIN {
 }
 
 function parse_header(str) {
-	match($0, /#+/);
+	match(str, /#+/);
     hnum = RLENGTH;
 
 	content = parse_line(substr(str, hnum + 1, length(str) - hnum ));
@@ -225,10 +225,35 @@ function parse_blockquote(str,    i, lines, line, buf, result) {
 	return result;
 }
 
+function parse_code(str,    i, lines, result) {
+	if (match(str, /^```.*```$/)) {
+		gsub(/^```/, "", str);
+		gsub(/\n```$/, "", str);
+		return "<pre><code>" str "</code></pre>";
+	}
+	if (match(str, /^    /)) {
+		result = "";
+		split(str, lines, "\n");
+
+		for (i in lines) {
+			line = lines[i];
+			gsub(/^    /, "", line);
+			result = result "\n" line;
+		}
+		gsub(/^\n/, "", result);
+		return "<pre><code>" result "</code></pre>";
+	}
+
+	return "";
+}
+
 function parse_block(str) {
 	if (str == "")
 		return "";
 
+	if (match(str, /^```\n.*```$/) || match(str, /^    /)) {
+		return parse_code(str);
+	}
 	if (substr(str, 1, 1) == "#") {
 		return parse_header(str);
 	}
@@ -243,48 +268,40 @@ function parse_block(str) {
 	}
 }
 
-function parse_body(str) {
-    print(parse_block(str));
-}
+function line_continues(body, line) {
+	if (match(body, /^    /) && match(line, /^    /))
+		return 1;
 
-/^#/ {
-	if (body != "") {
-		parse_body(body);
-	}
-	parse_body($0);
-	body = "";
-    next;
-}
+	if (match(body, /^```\n/) && !match(body, /\n```$/))
+		return 1;
 
-/^$/ {
-	if (body == "")
-		next;
+	if (match(body, /^#* /))
+		return 0;
 
-	if (startswith(body, "```") == 1) {
-		body = body "\n";
-		next;
-	}
+	if (line != "")
+		return 1;
 
-	parse_body(body);
-	body = "";
-	next;
-}
-
-/```/ {
-	if (startswith(body, "```") == 1) {
-		print "<pre><code>" substr(body, 4, length(body)-3) "</code></pre>";
-		body = "";
-		next;
-	}
+	return 0;
 }
 
 // {
-	body = join_lines(body, $0, "\n")
+	if (line_continues(body, $0)) {
+		if (body != "")
+			body = body "\n" $0;
+		else
+			body = $0;
+		next;
+	}
+
+	if (body != "") 
+		print parse_block(body);
+
+	body = $0;
+
 	next;
 }
 
 END {
-	if (body != "") {
-		parse_body(body);
-	}
+	if (body != "")
+		print parse_block(body);
 }

@@ -1,235 +1,212 @@
-# markdown implementation in awk
-# references: 
-# - https://gist.github.com/xdanger/116153
-# - https://github.com/nuex/zodiac/blob/master/lib/markdown.awk
-# - https://dataswamp.org/~solene/2019-08-26-minimal-markdown.html
-
 BEGIN {
-	si = 0;
-	stack[si] = "body";
-	val[si] = 0
-	res[si] = ""
-	i = 0;
+	body = ""
+	in_code = 0
 }
 
-function peek(num) {
-	return substr($0, i, num);
+function parse_header(str) {
+	match($0, /#+/);
+    hnum = RLENGTH;
+
+	content = parse_block(substr(str, hnum + 1, length(str) - hnum ));
+	return "<h" hnum ">" content "</h" hnum ">";
 }
 
-function push(block) {
-	stack[++si] = block;
-	res[si] = "";
-	val[si] = 0;
+function read_line(str, pos, res, i) {
+	res = "";
+	for (i=pos; i<=length(str); i++) {
+		if (substr(str, i, 1) == "\n")
+			return res;
+		res = res substr(str, i, 1);
+	}
+
+	return res;
 }
 
-function pop(str) {
-	res[si-1] = res[si-1] str
-	res[si] = ""
-	val[si] = 0
-	si--
-
-	if (stack[si] == "body") {
-		printf(res[si]);
-		res[si] = ""
+function find(str, s, i,    sl, j) {
+	sl = length(s);
+	for (j = i; j <= length(str); j++) {
+		if (substr(str, j, sl) == s)
+			return j;
 	}
+
+	return 0;
 }
 
-function handle_code() {
-	if (peek(1) == "`") {
-		i = i + 1;
-		pop("<code>" res[si] "</code>")
-		return;
+function startswith(str, s,    sl, j) {
+	sl = length(s);	
+	for (j = 1; j <= length(str); j++) {
+		if (substr(str, j, sl) == s)
+			return j;
+		if (substr(str, j, 1) != " ")
+			return 0;
 	}
-	if ($0 == "") {
-		pop("`" res[si])
-		return;
-	}
-	if (i > length($0)) {
-		next;
-	}
-
-	if (i == 1 && length(res[si]) > 0)
-		res[si] = res[si] " ";
-
-	res[si] = res[si] peek(1)
-	i++;
+	return 0;
 }
+#function parse_list_item(str, 
 
-function handle_code_long() {
-	if (peek(3) == "```") {
-		i = i + 3;
-		pop("<code>" res[si] "</code>")
-		return;
-	}
-	if (i > length($0)) {
-		res[si] = res[si] "\n";
-		next;
-	}
-
-	res[si] = res[si] peek(1)
-	i++;
-}
-
-function handle_inline_code() {
-	if (peek(1) == "`") {
-		i = i + 1;
-		pop("<code>" res[si] "</code>")
-		return;
-	}
-	if (i > length($0)) {
-		pop("`" res[si]);
-		return;
-	}
-
-	res[si] = res[si] peek(1)
-	i++;
-}
-
-function handle_inline_code_long() {
-	if (peek(3) == "```") {
-		i = i + 3;
-		pop("<code>" res[si] "</code>")
-		return;
-	}
-	if (i > length($0)) {
-		pop("```" res[si]);
-		return;
-	}
-
-	res[si] = res[si] peek(1)
-	i++;
-}
-
-function handle_inline_strong() {
-	if (peek(2) == "**") {
-		i = i + 2;
-		pop("<strong>" res[si] "</strong>")
-		return;
-	}
-	if (peek(3) == "```") {
-		i = i + 3;
-		push("inline_code_long");
-		return;
-	}
-	if (peek(1) == "`") {
-		i = i + 1;
-		push("inline_code");
-		return;
-	}
-    if (i > length($0)) {
-		pop("**" res[si]);
-		return;
-	}
-
-	res[si] = res[si] peek(1)
-	i++;
-}
-
-function handle_inline() {
-	if (peek(2) == "**") {
-		i = i + 2;
-		push("inline_strong");
-		return;
-	}
-	if (peek(3) == "```") {
-		i = i + 3;
-		push("inline_code_long");
-		return;
-	}
-
-	res[si] = res[si] peek(1);
-	i++;
-}
-
-function handle_block() {
-	if (peek(3) == "```") {
-		i = i + 3;
-		push("code_long");
-		return;
-	}
-	if (peek(1) == "`") {
-		i = i + 1;
-		push("code");
-		return;
-	}
-	res[si] = res[si] peek(1);
-	i++;
-}
-
-function handle_paragraph() {
-    if (i == 1 && ($0 == "" || peek(1) == "#")) {
-		if (length(res[si]) > 0)
-			pop("<p>" res[si] "</p>\n");
+function fold_lines(arr, i, result) {
+	for (i in arr) {
+		if (result != "")
+			result = result " " arr[i];
 		else
-			pop("");
-
-		if (peek(1) == "#")
-			return;
-
-		next;
+			result = arr[i];
 	}
-
-	if (i == 1 && length(res[si]) > 0)
-		res[si] = res[si] " ";
-
-	handle_block();
-
-	if (i > length($0))
-		next;
 }
 
-function handle_header() {
-	if (i == 1)	{
-		match($0, /#+/);
-	    val[si] = RLENGTH;
-		i = RLENGTH + 1;
-		return;
+function parse_list(str,    buf, result, i, ind, line, lines, indent) {
+	result = "<ul>\n";
+	buf = "";
+
+	print "parse: " str ">" startswith(str, "* ")
+	split(str, lines, "\n");
+
+	for (i in lines) {
+		line = lines[i];
 	}
 
-	if (i>length($0)) {
-		pop("<h" val[si] ">" res[si] "</h" val[si] ">\n");
-		next;
-	}
+	indent = 0;
+	for (i in lines) {
+		line = lines[i];
+		print "line: " line " " startswith(line, "* ") " " indent
+		ind = startswith(line, "* ");
+		if (indent == 0 && ind > 0) {
+			indent = ind;
+		}
+		else if (indent > 0 && ind > 0 && ind <= indent) {
+			if (length(buf) > 0) {
+				result = result "<li>" parse_list(buf) "</li>\n";
+				buf = "";
+			}
+		}
+		if (length(buf) > 0)
+			buf = buf "\n";
 
-	handle_inline();
+		if (ind > 0 && ind <= indent) {
+			buf = buf substr(line, ind+2, length(line) - 2);
+		}
+		else
+			buf = buf line;
+	}
+	if (length(buf) > 0) {
+		result = result "<li>" parse_list(buf) "</li>\n";
+	}
+	result = result "</ul>";
+	return result;
 }
 
-function handle_body() {
-	if (peek(1) == "#") {
-		push("header");
-		return;
+function parse_block(str,    result, end, i) {
+	#print "block '" str "'"
+	result = ""
+
+	if (substr(str, 1, 2) == "* ") {
+		return parse_list(str);
+	}
+
+	for (i=1; i<=length(str); i++) {
+		if (substr(str, i, 2) == "**") {
+			end = find(str, "**", i+2);
+
+			if (end != 0) {
+				result = result "<strong>" parse_block(substr(str, i+2, end - i - 2)) "</strong>";	
+				i = end+1;
+			}
+			else {
+				result = result "**";
+				i++;
+			}
+		}
+		else if (substr(str, i, 3) == "```") {
+			end = find(str, "```", i+3);
+			if (end != 0) {
+				result = result "<code>" substr(str, i+3, end - i - 3) "</code>";
+				i = end+1;
+			}
+			else {
+				result = result "```";
+				i=i+2;
+			}
+		}
+		else if (substr(str, i, 1) == "`") {
+			end = find(str, "`", i+1);
+
+		}
+		else {
+			if (substr(str, i, 1) == "\n") {
+				if (length(result) > 0)
+					result = result " ";
+			}
+			else {
+				result = result substr(str, i, 1);
+			}
+		}
+	}
+	#print "block result '" result "'"
+	return result;
+}
+
+function parse_paragraph(str) {
+	if (substr(str, 1, 2 ) == "* ") {
+		return parse_block(str);
+	}
+	else  {
+		return "<p>" parse_block(str) "</p>";
+	}
+}
+
+function parse_body(str) {
+	if (substr(str, 1, 1) == "#") {
+		print(parse_header(str));
 	}
 	else {
-		push("paragraph");
-		return;
+		print(parse_paragraph(str));
+	}
+}
+
+/^#/ {
+	if (body != "") {
+		parse_body(body);
+	}
+	parse_body($0);
+	body = "";
+    next;
+}
+
+/^$/ {
+	if (body == "")
+		next;
+
+	if (startswith(body, "```") == 1) {
+		body = body "\n";
+		next;
+	}
+
+	parse_body(body);
+	body = "";
+	next;
+}
+
+/```/ {
+	if (startswith(body, "```") == 1) {
+	    if (body != "")
+		    body = body "\n";
+
+		print "<code>" substr(body, 4, length(body)-3) "</code>";
+		body = "";
+		next;
 	}
 }
 
 // {
-	i = 1;
+	if (body != "")
+		body = body "\n" $0;
+	else
+		body = $0;
 
-	while (1) {
-		if (stack[si] == "body")
-			handle_body();
-		else if (stack[si] == "paragraph")
-			handle_paragraph();
-		else if (stack[si] == "header")
-			handle_header();
-		else if (stack[si] == "inline_strong")
-			handle_inline_strong();
-		else if (stack[si] == "inline_code_long")
-			handle_inline_code_long();
-		else if (stack[si] == "inline_code")
-			handle_inline_code();
-		else if (stack[si] == "code_long")
-			handle_code_long();
-		else if (stack[si] == "code")
-			handle_code();
-	}
+	next;
 }
 
-
 END {
-	#print res[si];
-	#newblock();
+	if (body != "") {
+		parse_body(body);
+	}
 }

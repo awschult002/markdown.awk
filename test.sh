@@ -121,12 +121,16 @@ check <<-"EOF"
 first line of code
 
 second line of code
+
+> < &
 ```
 ---
 <pre><code>
 first line of code
 
-second line of code</code></pre>
+second line of code
+
+&gt; &lt; &amp;</code></pre>
 EOF
 
 check <<-"EOF"
@@ -136,6 +140,12 @@ first line of code
 second line of code
 ---
 <p>``` first line of code  second line of code</p>
+EOF
+
+check <<-"EOF"
+This is `inline code`
+---
+<p>This is <code>inline code</code></p>
 EOF
 
 check <<-"EOF"
@@ -309,6 +319,72 @@ check <<-"EOF"
 foo <a href="" ></a> bar
 ---
 <p>foo <a href="" ></a> bar</p>
+EOF
+
+check <<-"EOF"
+\\
+
+\`
+
+\*
+
+\_
+
+\{
+
+\}
+
+\[
+
+\]
+
+\(
+
+\)
+
+\>
+
+\#
+
+\.
+
+\!
+
+\+
+
+\-
+---
+<p>\</p>
+<p>`</p>
+<p>*</p>
+<p>_</p>
+<p>{</p>
+<p>}</p>
+<p>[</p>
+<p>]</p>
+<p>(</p>
+<p>)</p>
+<p>&gt;</p>
+<p>#</p>
+<p>.</p>
+<p>!</p>
+<p>+</p>
+<p>-</p>
+EOF
+
+check <<-"EOF"
+`This shouldn't be escaped: \*`
+---
+<p><code>This shouldn't be escaped: \*</code></p>
+EOF
+
+check <<-"EOF"
+```
+This shouldn't be escaped: \*
+```
+---
+<pre><code>
+This shouldn't be escaped: \*</code></pre>
 EOF
 
 echo 

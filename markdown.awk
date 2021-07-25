@@ -160,17 +160,6 @@ function is_token(str, i, tok) {
 	return substr(str, i, length(tok)) == tok;
 }
 
-function escape_char(char) {
-    if (char == "<")
-		return "&lt;";
-    if (char == ">")
-		return "&gt;";
-	if (char == "&")
-		return "&amp;";
-
-	return char;
-}
-
 function extract_html_tag(str, i,    sstr) {
     sstr=substr(str, i, length(str) - i + 1);
 
@@ -188,6 +177,19 @@ function is_html_tag(str, i,    sstr) {
 		return 0;
 
 	return 1;
+}
+
+function is_escape_sequence(str, i,    sstr) {
+    sstr=substr(str, i, length(str) - i + 1);
+
+	return match(sstr, /^\\[`\\*_{}\[\]()>#.!+-]/);
+}
+
+function escape_text(str) {
+	gsub(/&/, "\\&amp;", str);
+	gsub(/</, "\\&lt;", str);
+	gsub(/>/, "\\&gt;", str);
+	return str;
 }
 
 function parse_line(str,    result, end, i) {
@@ -211,8 +213,8 @@ function parse_line(str,    result, end, i) {
 		else if (is_token(str, i, "```")) {
 			end = find(str, "```", i+3);
 			if (end != 0) {
-				result = result "<code>" substr(str, i+3, end - i - 3) "</code>";
-				i = end+1;
+				result = result "<code>" escape_text(substr(str, i+3, end - i - 3)) "</code>";
+				i = end+2;
 			}
 			else {
 				result = result "```";
@@ -221,12 +223,22 @@ function parse_line(str,    result, end, i) {
 		}
 		else if (substr(str, i, 1) == "`") {
 			end = find(str, "`", i+1);
-
+			if (end != 0) {
+				result = result "<code>" escape_text(substr(str, i+1, end - i - 1)) "</code>";
+				i = end+1;
+			}
+			else {
+				result = result "`";
+			}
 		}
 		else if (is_html_tag(str, i)) {
 			tag = extract_html_tag(str, i);
 		    result = result tag;
 			i = i + length(tag) - 1;
+		}
+		else if (is_escape_sequence(str, i)) {
+			result = result escape_text(substr(str, i+1, 1));
+		    i = i + 1;
 		}
 		else {
 			if (substr(str, i, 1) == "\n") {
@@ -234,7 +246,7 @@ function parse_line(str,    result, end, i) {
 					result = result " ";
 			}
 			else {
-				result = result escape_char(substr(str, i, 1));
+				result = result escape_text(substr(str, i, 1));
 			}
 		}
 	}
@@ -284,7 +296,7 @@ function parse_code(str,    i, lines, result) {
 	if (match(str, /^```.*```$/)) {
 		gsub(/^```/, "", str);
 		gsub(/\n```$/, "", str);
-		return "<pre><code>" str "</code></pre>";
+		return "<pre><code>" escape_text(str) "</code></pre>";
 	}
 	if (match(str, /^    /)) {
 		result = "";
@@ -296,7 +308,7 @@ function parse_code(str,    i, lines, result) {
 			result = result "\n" line;
 		}
 		gsub(/^\n/, "", result);
-		return "<pre><code>" result "</code></pre>";
+		return "<pre><code>" escape_text(result) "</code></pre>";
 	}
 
 	return "";

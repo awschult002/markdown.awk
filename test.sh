@@ -301,5 +301,11 @@ foo&bar
 <p>2 &gt; 1</p>
 EOF
 
+check <<-"EOF"
+foo <a href="" ></a> bar
+---
+<p>foo <a href="" ></a> bar</p>
+EOF
+
 echo 
 echo "All tests passed"

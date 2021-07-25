@@ -171,6 +171,25 @@ function escape_char(char) {
 	return char;
 }
 
+function extract_html_tag(str, i,    sstr) {
+    sstr=substr(str, i, length(str) - i + 1);
+
+    if (match(sstr, /^<\/[a-zA-Z][a-zA-Z0-9]*>/))
+		return substr(str, i, RLENGTH) ;
+
+    if (match(sstr, /^<[a-zA-Z][a-zA-Z0-9]*( *[a-zA-Z][a-zA-Z0-9]* *= *"[^"]*")* *>/))
+		return substr(str, i, RLENGTH);
+
+	return "";
+}
+
+function is_html_tag(str, i,    sstr) {
+	if (extract_html_tag(str, i) == "")
+		return 0;
+
+	return 1;
+}
+
 function parse_line(str,    result, end, i) {
 	#print "block '" str "'"
 	result = ""
@@ -203,6 +222,11 @@ function parse_line(str,    result, end, i) {
 		else if (substr(str, i, 1) == "`") {
 			end = find(str, "`", i+1);
 
+		}
+		else if (is_html_tag(str, i)) {
+			tag = extract_html_tag(str, i);
+		    result = result tag;
+			i = i + length(tag) - 1;
 		}
 		else {
 			if (substr(str, i, 1) == "\n") {

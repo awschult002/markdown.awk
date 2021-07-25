@@ -15,6 +15,18 @@ You can try it out by converting this readme to html:
 awk -f markdown.awk README.md
 ```
 
+## Features
+
+Here's a list of supported markdown primitives
+
+- Headers
+- Paragraphs
+- Text formatting: bold
+- Code blocks
+- Blockquotes
+- Lists, both bulleted and numbered
+- Inline html (partial)
+
 ## License
 
 Distributed under the terms of the BSD License

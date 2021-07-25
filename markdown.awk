@@ -65,6 +65,10 @@ function lstrip(str) {
 	return str;
 }
 
+function escape_special() {
+	
+}
+
 function join_lines(first, second, sep) {
 	if (sep == "")
 		sep = " ";
@@ -152,13 +156,28 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	return result;
 }
 
+function is_token(str, i, tok) {
+	return substr(str, i, length(tok)) == tok;
+}
+
+function escape_char(char) {
+    if (char == "<")
+		return "&lt;";
+    if (char == ">")
+		return "&gt;";
+	if (char == "&")
+		return "&amp;";
+
+	return char;
+}
+
 function parse_line(str,    result, end, i) {
 	#print "block '" str "'"
 	result = ""
 
 
 	for (i=1; i<=length(str); i++) {
-		if (substr(str, i, 2) == "**") {
+		if (is_token(str, i, "**")){
 			end = find(str, "**", i+2);
 
 			if (end != 0) {
@@ -170,7 +189,7 @@ function parse_line(str,    result, end, i) {
 				i++;
 			}
 		}
-		else if (substr(str, i, 3) == "```") {
+		else if (is_token(str, i, "```")) {
 			end = find(str, "```", i+3);
 			if (end != 0) {
 				result = result "<code>" substr(str, i+3, end - i - 3) "</code>";
@@ -191,7 +210,7 @@ function parse_line(str,    result, end, i) {
 					result = result " ";
 			}
 			else {
-				result = result substr(str, i, 1);
+				result = result escape_char(substr(str, i, 1));
 			}
 		}
 	}

@@ -266,6 +266,20 @@ check <<-"EOF"
 EOF
 
 check <<-"EOF"
+> foo
+> 
+>> bar
+>> baz
+---
+<blockquote>
+<p>foo</p>
+<blockquote>
+<p>bar baz</p>
+</blockquote>
+</blockquote>
+EOF
+
+check <<-"EOF"
 >     code blocks
 >     in blockquotes
 ---
@@ -273,6 +287,18 @@ check <<-"EOF"
 <pre><code>code blocks
 in blockquotes</code></pre>
 </blockquote>
+EOF
+
+check <<-"EOF"
+foo&bar
+
+1 < 2
+
+2 > 1
+---
+<p>foo&amp;bar</p>
+<p>1 &lt; 2</p>
+<p>2 &gt; 1</p>
 EOF
 
 echo 

@@ -143,9 +143,9 @@ second line of code
 EOF
 
 check <<-"EOF"
-This is `inline code`
+This is `inline code` block
 ---
-<p>This is <code>inline code</code></p>
+<p>This is <code>inline code</code> block</p>
 EOF
 
 check <<-"EOF"

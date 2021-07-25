@@ -225,7 +225,7 @@ function parse_line(str,    result, end, i) {
 			end = find(str, "`", i+1);
 			if (end != 0) {
 				result = result "<code>" escape_text(substr(str, i+1, end - i - 1)) "</code>";
-				i = end+1;
+				i = end;
 			}
 			else {
 				result = result "`";

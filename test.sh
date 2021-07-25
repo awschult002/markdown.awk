@@ -153,11 +153,15 @@ asdf
 
 * foo
 * bar
+- baz
++ qux
 ---
 <p>asdf</p>
 <ul>
 <li>foo</li>
 <li>bar</li>
+<li>baz</li>
+<li>qux</li>
 </ul>
 EOF
 

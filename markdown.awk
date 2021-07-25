@@ -83,7 +83,7 @@ function join_lines(first, second, sep) {
 }
 
 function strip_list(str) {
-	gsub(/^ *\* /, "", str);
+	gsub(/^ *[-+*] /, "", str);
 	gsub(/^ *[[:digit:]]*\. /, "", str);
 	return str;
 }
@@ -98,7 +98,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	for (i in lines) {
 		line = lines[i];
 
-		if (match(line, / *\* /) || match(line, / *[[:digit:]]+\. /))
+		if (match(line, /^ *[-+*] /) || match(line, /^ *[[:digit:]]+\. /))
 			str = join_lines(str, line, "\n");
 		else
 			str = join_lines(rstrip(str), lstrip(line), " ");
@@ -107,7 +107,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	split(str, lines, "\n")
 
 	indent = match(str, /[^ ]/);
-	is_bullet = match(str, /^ *\* /)
+	is_bullet = match(str, /^ *[-+*] /)
 
 	if (is_bullet)
 		result = "<ul>\n"
@@ -135,7 +135,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 			is_bullet = 0;
 			result = result "</ul>\n<ol>\n";
 		}
-		if (is_bullet == 0 && match(line, / *\* /)) {
+		if (is_bullet == 0 && match(line, / *[-+*] /)) {
 			is_bullet = 1;
 			result = result "</ol>\n<ul>\n";
 		}
@@ -315,7 +315,7 @@ function parse_block(str) {
 	else if (substr(str, 1, 1) == ">") {
 		return parse_blockquote(str);
 	}
-	else if (match(str, /^\* /) || match(str, /^[[:digit:]]\. /)) {
+	else if (match(str, /^[-+*] /) || match(str, /^[[:digit:]]\. /)) {
 		return parse_list(str);
 	}
 	else  {

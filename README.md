@@ -26,6 +26,7 @@ Here's a list of supported markdown primitives
 - Blockquotes
 - Lists, both bulleted and numbered
 - Inline html (partial)
+- Links
 
 ## License
 

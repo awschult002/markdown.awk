@@ -185,6 +185,29 @@ function is_escape_sequence(str, i,    sstr) {
 	return match(sstr, /^\\[`\\*_{}\[\]()>#.!+-]/);
 }
 
+function extract_link(str, i,    sstr) {
+    sstr=substr(str, i, length(str) - i + 1);
+
+    if (!match(sstr, /^\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+		return "";
+
+	return substr(str, i, RLENGTH);
+}
+
+function parse_link(str,    arr) {
+    if (!match(str, /^\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+		return "";
+
+	if (arr[4] == "") {
+		return "<a href=\"" arr[2] "\">" arr[1] "</a>"
+	}
+	return "<a href=\"" arr[2] "\" title=\"" arr[4] "\">" arr[1] "</a>"
+}
+
+function is_link(str, i) {
+	return extract_link(str, i) != "";
+}
+
 function escape_text(str) {
 	gsub(/&/, "\\&amp;", str);
 	gsub(/</, "\\&lt;", str);
@@ -192,13 +215,13 @@ function escape_text(str) {
 	return str;
 }
 
-function parse_line(str,    result, end, i) {
-	#print "block '" str "'"
+function parse_line(str,    result, end, i, c) {
 	result = ""
 
-
 	for (i=1; i<=length(str); i++) {
-		if (is_token(str, i, "**")){
+		c = substr(str, i, 1);
+
+		if (c == "*" && is_token(str, i, "**")){
 			end = find(str, "**", i+2);
 
 			if (end != 0) {
@@ -210,7 +233,7 @@ function parse_line(str,    result, end, i) {
 				i++;
 			}
 		}
-		else if (is_token(str, i, "```")) {
+		else if (c == "`" && is_token(str, i, "```")) {
 			end = find(str, "```", i+3);
 			if (end != 0) {
 				result = result "<code>" escape_text(substr(str, i+3, end - i - 3)) "</code>";
@@ -221,7 +244,7 @@ function parse_line(str,    result, end, i) {
 				i=i+2;
 			}
 		}
-		else if (substr(str, i, 1) == "`") {
+		else if (c == "`" && substr(str, i, 1) == "`") {
 			end = find(str, "`", i+1);
 			if (end != 0) {
 				result = result "<code>" escape_text(substr(str, i+1, end - i - 1)) "</code>";
@@ -231,22 +254,27 @@ function parse_line(str,    result, end, i) {
 				result = result "`";
 			}
 		}
-		else if (is_html_tag(str, i)) {
+		else if (c == "<" && is_html_tag(str, i)) {
 			tag = extract_html_tag(str, i);
 		    result = result tag;
 			i = i + length(tag) - 1;
 		}
-		else if (is_escape_sequence(str, i)) {
+		else if (c == "\\" && is_escape_sequence(str, i)) {
 			result = result escape_text(substr(str, i+1, 1));
 		    i = i + 1;
 		}
+		else if (c == "[" && is_link(str, i)) {
+			link = extract_link(str, i);
+			result = result parse_link(link);
+		    i = i + length(link) - 1; 
+		}
 		else {
-			if (substr(str, i, 1) == "\n") {
+			if (c == "\n") {
 				if (length(result) > 0)
 					result = result " ";
 			}
 			else {
-				result = result escape_text(substr(str, i, 1));
+				result = result escape_text(c);
 			}
 		}
 	}

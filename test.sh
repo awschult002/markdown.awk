@@ -387,5 +387,14 @@ This shouldn't be escaped: \*
 This shouldn't be escaped: \*</code></pre>
 EOF
 
+check <<-"EOF"
+Spimple link: [foo](/bar)
+
+Link with title: [foo](/bar "baz")
+---
+<p>Spimple link: <a href="/bar">foo</a></p>
+<p>Link with title: <a href="/bar" title="baz">foo</a></p>
+EOF
+
 echo 
 echo "All tests passed"

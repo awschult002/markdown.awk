@@ -5,6 +5,7 @@ BEGIN {
 
 function parse_header(str,    hnum, content) {
 	if (substr(str, 1, 1) == "#") {
+		gsub(/ *#* *$/, "", str);
 		match(str, /#+/);
     	hnum = RLENGTH;
 
@@ -364,7 +365,7 @@ function parse_block(str) {
 }
 
 function line_continues(body, line) {
-	if (match(body, /^    /) && match(line, /^    /))
+	if (match(body, /^    /) && (match(line, /^    /) || line == ""))
 		return 1;
 
 	if (match(body, /^```\n/) && !match(body, /\n```$/))

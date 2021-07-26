@@ -87,6 +87,12 @@ check <<-EOF
 EOF
 
 check <<-EOF
+# Header ### 
+---
+<h1>Header</h1>
+EOF
+
+check <<-EOF
 underlined header 1
 ===================
 
@@ -150,11 +156,15 @@ EOF
 
 check <<-"EOF"
     code
+    
     indented by
+
     spaces
 ---
 <pre><code>code
+
 indented by
+
 spaces</code></pre>
 EOF
 

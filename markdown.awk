@@ -354,6 +354,12 @@ function parse_block(str) {
 	else if (substr(str, 1, 1) == ">") {
 		return parse_blockquote(str);
 	}
+	else if ( \
+		match(str, /^[[:space:]]*\*[[:space:]]*\*[[:space:]]*\*[[:space:]]*$/) ||
+		match(str, /^[[:space:]]*-[[:space:]]*-[[:space:]]*-[[:space:]]*$/) ||
+		match(str, /^[[:space:]]*_[[:space:]]*_[[:space:]]*_[[:space:]]*$/)) {
+			return "<hr />";
+	}
 	else if (match(str, /^[-+*][[:space:]]/) || match(str, /^[[:digit:]]\.[[:space:]]/)) {
 		return parse_list(str);
 	}

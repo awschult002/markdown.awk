@@ -423,5 +423,20 @@ Link with title: [foo](/bar "baz")
 <p>Link with title: <a href="/bar" title="baz">foo</a></p>
 EOF
 
+check <<-"EOF"
+Horizontal rules:
+
+- - -
+
+* * *
+
+_ _ _
+---
+<p>Horizontal rules:</p>
+<hr />
+<hr />
+<hr />
+EOF
+
 echo 
 echo "All tests passed"

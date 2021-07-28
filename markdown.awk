@@ -84,8 +84,8 @@ function join_lines(first, second, sep) {
 }
 
 function strip_list(str) {
-	gsub(/^ *[-+*] /, "", str);
-	gsub(/^ *[[:digit:]]*\. /, "", str);
+	gsub(/^[[:space:]]*[-+*][[:space:]]/, "", str);
+	gsub(/^[[:space:]]*[[:digit:]]*\.[[:space:]]/, "", str);
 	return str;
 }
 
@@ -99,7 +99,8 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	for (i in lines) {
 		line = lines[i];
 
-		if (match(line, /^ *[-+*] /) || match(line, /^ *[[:digit:]]+\. /))
+		if (match(line, /^[[:space:]]*[-+*][[:space:]]/) || 
+			match(line, /^[[:space:]]*[[:digit:]]+\.[[:space:]]/))
 			str = join_lines(str, line, "\n");
 		else
 			str = join_lines(rstrip(str), lstrip(line), " ");
@@ -108,7 +109,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	split(str, lines, "\n")
 
 	indent = match(str, /[^ ]/);
-	is_bullet = match(str, /^ *[-+*] /)
+	is_bullet = match(str, /^[[:space:]]*[-+*][[:space:]]/)
 
 	if (is_bullet)
 		result = "<ul>\n"
@@ -132,11 +133,11 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 		if (i > 1)
 			result = result "</li>\n"
 
-		if (is_bullet && match(line, / *[[:digit:]]+\. /)) {
+		if (is_bullet && match(line, /[[:space:]]*[[:digit:]]+\.[[:space:]]/)) {
 			is_bullet = 0;
 			result = result "</ul>\n<ol>\n";
 		}
-		if (is_bullet == 0 && match(line, / *[-+*] /)) {
+		if (is_bullet == 0 && match(line, /[[:space:]]*[-+*][[:space:]]/)) {
 			is_bullet = 1;
 			result = result "</ol>\n<ul>\n";
 		}
@@ -304,17 +305,14 @@ function parse_blockquote(str,    i, lines, line, buf, result) {
 		line = lines[i];
 		gsub(/^> ?/, "", line);
 
-		if (match(line, /^ *$/)) {
-			result = join_lines(result, parse_block(buf), "\n");
-			buf = "";
-		}
-		else {
-			buf = join_lines(buf, line, "\n");	
-		}
+		if (buf != "")
+			buf = buf "\n" line;	
+		else
+			buf = line;
 	}
 
 	if (buf != "")
-		result = join_lines(result, parse_block(buf), "\n");
+		result = join_lines(result, parse_body(buf), "\n");
 
 	result = result "\n</blockquote>"
 
@@ -356,12 +354,37 @@ function parse_block(str) {
 	else if (substr(str, 1, 1) == ">") {
 		return parse_blockquote(str);
 	}
-	else if (match(str, /^[-+*] /) || match(str, /^[[:digit:]]\. /)) {
+	else if (match(str, /^[-+*][[:space:]]/) || match(str, /^[[:digit:]]\.[[:space:]]/)) {
 		return parse_list(str);
 	}
 	else  {
 		return "<p>" parse_line(str) "</p>";
 	}
+}
+
+function parse_body(str,    body, line, lines, result, i) {
+	split(str, lines, "\n");
+    result = "";
+	body = "";
+
+	for (i in lines) {
+		line = lines[i];
+		if (line_continues(body, line)) {
+			if (body != "")
+				body = body "\n" line;
+			else
+				body = line;
+		}
+		else if (body != "") {
+			result = join_lines(result, parse_block(body), "\n");
+			body = "";
+		}
+	}
+
+	if (body != "")
+		result = join_lines(result, parse_block(body), "\n");
+
+	return result;
 }
 
 function line_continues(body, line) {

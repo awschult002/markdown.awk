@@ -314,6 +314,23 @@ in blockquotes</code></pre>
 EOF
 
 check <<-"EOF"
+> A list within a blockquote:
+>
+> *	asterisk 1
+> *	asterisk 2
+> *	asterisk 3
+---
+<blockquote>
+<p>A list within a blockquote:</p>
+<ul>
+<li>asterisk 1</li>
+<li>asterisk 2</li>
+<li>asterisk 3</li>
+</ul>
+</blockquote>
+EOF
+
+check <<-"EOF"
 foo&bar
 
 1 < 2

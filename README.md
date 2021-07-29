@@ -27,6 +27,7 @@ Here's a list of supported markdown primitives
 - Lists, both bulleted and numbered
 - Inline html (partial)
 - Links
+- Images
 
 ## License
 

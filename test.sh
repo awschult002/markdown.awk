@@ -424,6 +424,15 @@ Link with title: [foo](/bar "baz")
 EOF
 
 check <<-"EOF"
+Spimple image: ![foo](/bar)
+
+Image with title: ![foo](/bar "baz")
+---
+<p>Spimple image: <img src="/bar" alt="foo" /></p>
+<p>Image with title: <img src="/bar" alt="foo" title="baz" /></p>
+EOF
+
+check <<-"EOF"
 Horizontal rules:
 
 - - -

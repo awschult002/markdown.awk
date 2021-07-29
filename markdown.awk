@@ -206,8 +206,31 @@ function parse_link(str,    arr) {
 	return "<a href=\"" arr[2] "\" title=\"" arr[4] "\">" arr[1] "</a>"
 }
 
+function extract_image(str, i,    sstr) {
+    sstr=substr(str, i, length(str) - i + 1);
+
+    if (!match(sstr, /^!\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+		return "";
+
+	return substr(str, i, RLENGTH);
+}
+
+function parse_image(str,    arr) {
+    if (!match(str, /^!\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+		return "";
+
+	if (arr[4] == "") {
+		return "<img src=\"" arr[2] "\" alt=\"" arr[1] "\" />"
+	}
+	return "<img src=\"" arr[2] "\" alt=\"" arr[1] "\" title=\"" arr[4] "\" />"
+}
+
 function is_link(str, i) {
 	return extract_link(str, i) != "";
+}
+
+function is_image(str, i) {
+	return extract_image(str, i) != "";
 }
 
 function escape_text(str) {
@@ -269,6 +292,11 @@ function parse_line(str,    result, end, i, c) {
 			link = extract_link(str, i);
 			result = result parse_link(link);
 		    i = i + length(link) - 1; 
+		}
+		else if (c == "!" && is_image(str, i)) {
+			image = extract_image(str, i);
+			result = result parse_image(image);
+		    i = i + length(image) - 1; 
 		}
 		else {
 			if (c == "\n") {

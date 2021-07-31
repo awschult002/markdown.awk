@@ -440,8 +440,11 @@ Horizontal rules:
 * * *
 
 _ _ _
+
+********
 ---
 <p>Horizontal rules:</p>
+<hr />
 <hr />
 <hr />
 <hr />

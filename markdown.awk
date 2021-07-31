@@ -240,6 +240,22 @@ function escape_text(str) {
 	return str;
 }
 
+function extract_emphasis(str, i,    sstr, arr, num, c) {
+    sstr=substr(str, i, length(str) - i + 1);
+	c = ""
+
+	if (match(sstr, /^\*{1,3}[^\*]/)) {
+		c = "*";
+		num = RLENGTH;
+	}
+
+	if (match(sstr, /^_{1,3}[^_]/)) {
+		c = "_";
+		num = RLENGTH;
+	}
+
+}
+
 function parse_line(str,    result, end, i, c) {
 	result = ""
 
@@ -383,9 +399,9 @@ function parse_block(str) {
 		return parse_blockquote(str);
 	}
 	else if ( \
-		match(str, /^[[:space:]]*\*[[:space:]]*\*[[:space:]]*\*[[:space:]]*$/) ||
-		match(str, /^[[:space:]]*-[[:space:]]*-[[:space:]]*-[[:space:]]*$/) ||
-		match(str, /^[[:space:]]*_[[:space:]]*_[[:space:]]*_[[:space:]]*$/)) {
+		match(str, /^([[:space:]]*\*){3,}[[:space:]]*$/) ||
+		match(str, /^([[:space:]]*-){3,}[[:space:]]*$/) ||
+		match(str, /^([[:space:]]*_){3,}[[:space:]]*$/)) {
 			return "<hr />";
 	}
 	else if (match(str, /^[-+*][[:space:]]/) || match(str, /^[[:digit:]]\.[[:space:]]/)) {

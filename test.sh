@@ -104,9 +104,30 @@ underlined header 2
 EOF
 
 check <<-EOF
+*italic*
+
+_italic_
+---
+<p><em>italic</em></p>
+<p><em>italic</em></p>
+EOF
+
+check <<-EOF
 **bold**
+
+__bold__
 ---
 <p><strong>bold</strong></p>
+<p><strong>bold</strong></p>
+EOF
+
+check <<-EOF
+***bold italic***
+
+___bold italic___
+---
+<p><strong><em>bold italic</em></strong></p>
+<p><strong><em>bold italic</em></strong></p>
 EOF
 
 check <<-EOF

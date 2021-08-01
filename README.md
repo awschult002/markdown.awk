@@ -21,7 +21,7 @@ Here's a list of supported markdown primitives
 
 - Headers
 - Paragraphs
-- Text formatting: bold
+- Text formatting: bold/italic
 - Code blocks
 - Blockquotes
 - Lists, both bulleted and numbered

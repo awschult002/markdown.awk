@@ -7,7 +7,7 @@ function parse_header(str,    hnum, content) {
 	if (substr(str, 1, 1) == "#") {
 		gsub(/ *#* *$/, "", str);
 		match(str, /#+/);
-    	hnum = RLENGTH;
+		hnum = RLENGTH;
 
 		gsub(/^#+ */, "", str);
 		content = parse_line(str);
@@ -240,20 +240,34 @@ function escape_text(str) {
 	return str;
 }
 
-function extract_emphasis(str, i,    sstr, arr, num, c) {
-    sstr=substr(str, i, length(str) - i + 1);
-	c = ""
+function extract_emphasis(str, i,    sstr) {
+	sstr=substr(str, i, length(str) - i + 1);
 
-	if (match(sstr, /^\*{1,3}[^\*]/)) {
-		c = "*";
-		num = RLENGTH;
+	if (match(sstr, /^\*[^\*]+\*/) ||
+	    match(sstr, /^\*\*[^\*]+\*\*/) ||
+	    match(sstr, /^\*\*\*[^\*]+\*\*\*/) ||
+	    match(sstr, /^_[^_]+_/) ||
+	    match(sstr, /^__[^_]+__/) ||
+	    match(sstr, /^___[^_]+___/))
+		return substr(str, i, RLENGTH);
+
+	return "";
+}
+
+function parse_emphasis(str, i) {
+	match(str, /^[\*_]{1,3}/);
+	num = RLENGTH;
+
+	if (num == 1) {
+		return "<em>" parse_line(substr(str, 2, length(str) - 2)) "</em>";
 	}
-
-	if (match(sstr, /^_{1,3}[^_]/)) {
-		c = "_";
-		num = RLENGTH;
+	if (num == 2) {
+		return "<strong>" parse_line(substr(str, 3, length(str) - 4)) "</strong>";
 	}
-
+	if (num == 3) {
+		return "<strong><em>" parse_line(substr(str, 4, length(str) - 6)) "</em></strong>";
+	}
+	return "";
 }
 
 function parse_line(str,    result, end, i, c) {
@@ -262,17 +276,10 @@ function parse_line(str,    result, end, i, c) {
 	for (i=1; i<=length(str); i++) {
 		c = substr(str, i, 1);
 
-		if (c == "*" && is_token(str, i, "**")){
-			end = find(str, "**", i+2);
-
-			if (end != 0) {
-				result = result "<strong>" parse_line(substr(str, i+2, end - i - 2)) "</strong>";	
-				i = end+1;
-			}
-			else {
-				result = result "**";
-				i++;
-			}
+		if ((c == "*" || c == "_") && extract_emphasis(str, i) != ""){
+			emphasis = extract_emphasis(str, i);
+			result = result parse_emphasis(emphasis)
+			i = i + length(emphasis) - 1;
 		}
 		else if (c == "`" && is_token(str, i, "```")) {
 			end = find(str, "```", i+3);

@@ -96,7 +96,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	split(str, lines, "\n");
 
 	str = ""
-	for (i in lines) {
+	for (i=1; i<=length(lines); i++) {
 		line = lines[i];
 
 		if (match(line, /^[[:space:]]*[-+*][[:space:]]/) || 
@@ -116,7 +116,7 @@ function parse_list(str,    buf, result, i, ind, line, lines, indent, is_bullet)
 	else
 		result = "<ol>\n"
 
-	for (i in lines) {
+	for (i=1; i<=length(lines); i++) {
 		line = lines[i];
 
 		if (match(line, "[^ ]") > indent) {
@@ -182,47 +182,71 @@ function is_html_tag(str, i,    sstr) {
 }
 
 function is_escape_sequence(str, i,    sstr) {
-    sstr=substr(str, i, length(str) - i + 1);
+	sstr=substr(str, i, length(str) - i + 1);
 
 	return match(sstr, /^\\[`\\*_{}\[\]()>#.!+-]/);
 }
 
 function extract_link(str, i,    sstr) {
-    sstr=substr(str, i, length(str) - i + 1);
+	sstr=substr(str, i, length(str) - i + 1);
 
-    if (!match(sstr, /^\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+	if (!match(sstr, /^\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/))
 		return "";
 
 	return substr(str, i, RLENGTH);
 }
 
 function parse_link(str,    arr) {
-    if (!match(str, /^\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
-		return "";
+	match(str, /^\[([^\[\]]*)\]/);
+	name = substr(str, 2, RLENGTH-2);
+	sub(/^\[([^\[\]]*)\]/, "", str);
 
-	if (arr[4] == "") {
-		return "<a href=\"" arr[2] "\">" arr[1] "</a>"
+	sub(/^ *\( */, "", str);
+	sub(/ *\) *$/, "", str);
+
+	match(str, /^[^() ]*/);
+	url = substr(str, 1, RLENGTH);
+
+	sub(/^[^() ]*/, "", str);
+	sub(/^ *"/, "", str);
+	sub(/" *$/, "", str);
+	title = str;
+
+	if (title == "") {
+		return "<a href=\"" url "\">" name "</a>"
 	}
-	return "<a href=\"" arr[2] "\" title=\"" arr[4] "\">" arr[1] "</a>"
+	return "<a href=\"" url "\" title=\"" title "\">" name "</a>"
 }
 
 function extract_image(str, i,    sstr) {
-    sstr=substr(str, i, length(str) - i + 1);
+	sstr=substr(str, i, length(str) - i + 1);
 
-    if (!match(sstr, /^!\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
+	if (!match(sstr, /^!\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/))
 		return "";
 
 	return substr(str, i, RLENGTH);
 }
 
 function parse_image(str,    arr) {
-    if (!match(str, /^!\[([^\[\]]*)\]\( *([^() ]*)( +"([^"]*)")? *\)/, arr))
-		return "";
+	match(str, /^!\[([^\[\]]*)\]/);
+	name = substr(str, 3, RLENGTH-3);
+	sub(/^!\[([^\[\]]*)\]/, "", str);
 
-	if (arr[4] == "") {
-		return "<img src=\"" arr[2] "\" alt=\"" arr[1] "\" />"
+	sub(/^ *\( */, "", str);
+	sub(/ *\) *$/, "", str);
+
+	match(str, /^[^() ]*/);
+	url = substr(str, 1, RLENGTH);
+
+	sub(/^[^() ]*/, "", str);
+	sub(/^ *"/, "", str);
+	sub(/" *$/, "", str);
+	title = str;
+
+	if (title == "") {
+		return "<img src=\"" url "\" alt=\"" name "\" />"
 	}
-	return "<img src=\"" arr[2] "\" alt=\"" arr[1] "\" title=\"" arr[4] "\" />"
+	return "<img src=\"" url "\" alt=\"" name "\" title=\"" title "\" />"
 }
 
 function is_link(str, i) {
@@ -339,7 +363,7 @@ function parse_blockquote(str,    i, lines, line, buf, result) {
 	split(str, lines, "\n");
 
 	str = ""
-	for (i in lines) {
+	for (i=1; i<=length(lines); i++) {
 		line = lines[i];
 
 		if (match(line, /^>/))
@@ -352,7 +376,7 @@ function parse_blockquote(str,    i, lines, line, buf, result) {
 
 	result = "<blockquote>";
 	buf = "";
-	for (i in lines) {
+	for (i=1; i<=length(lines); i++) {
 		line = lines[i];
 		gsub(/^> ?/, "", line);
 
@@ -380,7 +404,7 @@ function parse_code(str,    i, lines, result) {
 		result = "";
 		split(str, lines, "\n");
 
-		for (i in lines) {
+		for (i=1; i<=length(lines); i++) {
 			line = lines[i];
 			gsub(/^    /, "", line);
 			result = result "\n" line;
@@ -421,10 +445,10 @@ function parse_block(str) {
 
 function parse_body(str,    body, line, lines, result, i) {
 	split(str, lines, "\n");
-    result = "";
+	result = "";
 	body = "";
 
-	for (i in lines) {
+	for (i=1; i<=length(lines); i++) {
 		line = lines[i];
 		if (line_continues(body, line)) {
 			if (body != "")

@@ -471,5 +471,20 @@ _ _ _
 <hr />
 EOF
 
+check <<-"EOF"
+this: 1
+is: 2
+metadata: 3
+---
+EOF
+
+check <<-"EOF"
+this: 1
+is: 2
+not metadata: 3
+---
+<p>this: 1 is: 2 not metadata: 3</p>
+EOF
+
 echo 
 echo "All tests passed"

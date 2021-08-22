@@ -2,7 +2,7 @@
 
 BEGIN {
 	body = ""
-	in_code = 0
+	first_paragraph = 1
 }
 
 function parse_header(str,    hnum, content) {
@@ -418,6 +418,17 @@ function parse_code(str,    i, lines, result) {
 	return "";
 }
 
+function is_metadata(str,    i, lines, line) {
+	split(str, lines, "\n");
+	for (i=1; i<=length(lines); i++) {
+		line = lines[i];
+
+		if (! match(line, /^[^ ]+: .+$/))
+			return 0;
+	}
+	return 1;
+}
+
 function parse_block(str) {
 	if (str == "")
 		return "";
@@ -498,8 +509,11 @@ function line_continues(body, line) {
 		next;
 	}
 
-	if (body != "") 
-		print parse_block(body);
+	if (body != "") {
+		if (!(first_paragraph && is_metadata(body)))
+			print parse_block(body);
+		first_paragraph = 0;
+	}
 
 	body = $0;
 
@@ -507,6 +521,8 @@ function line_continues(body, line) {
 }
 
 END {
-	if (body != "")
-		print parse_block(body);
+	if (body != "") {
+		if (!(first_paragraph && is_metadata(body)))
+			print parse_block(body);
+	}
 }

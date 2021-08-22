@@ -1,3 +1,5 @@
+#!/usr/bin/awk -f
+
 BEGIN {
 	body = ""
 	in_code = 0
